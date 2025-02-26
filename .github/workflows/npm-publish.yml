@@ -27,7 +27,13 @@ jobs:
           PATCH=$((VERSION_PARTS[2] + 1))
           NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$PATCH"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-      - run: npm version ${{ steps.version.outputs.NEW_VERSION }} --no-git-tag-version
-      - run: npm publish --access public
+        env:
+          NPM_CONFIG_USERCONFIG: /home/runner/work/_temp/.npmrc
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Update package version
+        run: |
+          npm version ${{ steps.version.outputs.NEW_VERSION }} --no-git-tag-version || echo "Version not changed"
+      - name: Publish package
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
