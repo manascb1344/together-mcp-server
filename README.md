@@ -18,7 +18,7 @@ npm install together-mcp
 Or run directly:
 
 ```bash
-npx together-mcp
+npx together-mcp@latest
 ```
 
 ### Configuration
@@ -32,7 +32,7 @@ Add to your MCP server configuration:
   "mcpServers": {
     "together-image-gen": {
       "command": "npx",
-      "args": ["together-mcp -y"],
+      "args": ["together-mcp@latest -y"],
       "env": {
         "TOGETHER_API_KEY": "<API KEY>"
       }

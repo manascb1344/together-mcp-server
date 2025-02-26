@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "together": {
+      "command": "npx",
+      "args": ["together-mcp@latest -y"],
+      "env": {
+        "TOGETHER_API_KEY": "your-api-key-here"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
