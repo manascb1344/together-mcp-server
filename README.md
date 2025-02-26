@@ -8,6 +8,7 @@ A Model Context Protocol (MCP) server that enables seamless generation of high-q
 - Support for customizable dimensions (width and height)
 - Clear error handling for prompt validation and API issues
 - Easy integration with MCP-compatible clients
+- Optional image saving to disk in PNG format
 
 ## Installation
 
@@ -63,6 +64,7 @@ This tool has only one required parameter - the prompt. All other parameters are
   steps?: number;          // Default: 1 (min: 1, max: 100)
   n?: number;             // Default: 1 (max: 4)
   response_format?: string; // Default: "b64_json" (options: ["b64_json", "url"])
+  image_path?: string;     // Optional: Path to save the generated image as PNG
 }
 ```
 
@@ -79,9 +81,9 @@ Only the prompt is required:
 }
 ```
 
-#### Full Request Example
+#### Full Request Example with Image Saving
 
-Override any defaults by including the parameters:
+Override any defaults and specify a path to save the image:
 
 ```json
 {
@@ -93,7 +95,8 @@ Override any defaults by including the parameters:
     "steps": 20,
     "n": 1,
     "response_format": "b64_json",
-    "model": "black-forest-labs/FLUX.1-schnell-Free"
+    "model": "black-forest-labs/FLUX.1-schnell-Free",
+    "image_path": "/path/to/save/image.png"
   }
 }
 ```
@@ -121,6 +124,8 @@ The response will be a JSON object containing:
 }
 ```
 
+If image_path was provided and the save was successful, the response will include confirmation of the save location.
+
 ### Default Values
 
 If not specified in the request, these defaults are used:
@@ -138,6 +143,7 @@ If not specified in the request, these defaults are used:
 2. All optional parameters use defaults if not provided
 3. When provided, parameters must meet their constraints (e.g., width/height ranges)
 4. Base64 responses can be large - use URL format for larger images
+5. When saving images, ensure the specified directory exists and is writable
 
 ## Prerequisites
 
