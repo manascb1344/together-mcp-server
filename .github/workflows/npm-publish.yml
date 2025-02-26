@@ -3,6 +3,11 @@ on:
   push:
     branches: ['**']
     tags: ['*']
+    paths:
+      - '**.js'
+      - '**.ts'
+      - 'package.json'
+      - 'package-lock.json'
   release:
     types: [published]
 jobs:
