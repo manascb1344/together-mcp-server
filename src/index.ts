@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
@@ -27,7 +28,7 @@ const defaultConfig = {
 };
 
 class ImageGenerationServer {
-  private readonly server: Server;
+  public readonly server: Server;
   private readonly apiKey: string;
   private readonly API_ENDPOINT = 'https://api.together.xyz/v1/images/generations';
   private readonly listToolsHandler: (request: any) => Promise<any>;
@@ -222,14 +223,16 @@ class ImageGenerationServer {
   }
 }
 
-interface Env {
-  TOGETHER_API_KEY: string;
-  AI: any; // Cloudflare Workers AI binding
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+
+// Get API key from environment variable
+const API_KEY = process.env.TOGETHER_API_KEY;
+if (!API_KEY) {
+  throw new Error('TOGETHER_API_KEY environment variable is required');
 }
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const server = new ImageGenerationServer(env.TOGETHER_API_KEY);
-    return server.handleRequest(request);
-  }
-};
+// Create and run server
+const server = new ImageGenerationServer(API_KEY);
+const transport = new StdioServerTransport();
+server.server.connect(transport).catch(console.error);
+console.error('Together Image Generation MCP server running on stdio');
