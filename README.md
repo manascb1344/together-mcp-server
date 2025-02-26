@@ -149,6 +149,10 @@ If not specified in the request, these defaults are used:
 
 - Node.js >= 16
 - Together AI API key
+  1. Sign in at [api.together.xyz](https://api.together.xyz/)
+  2. Navigate to [API Keys settings](https://api.together.xyz/settings/api-keys)
+  3. Click "Create" to generate a new API key
+  4. Copy the generated key for use in your MCP configuration
 
 ## Dependencies
 
@@ -185,6 +189,8 @@ Contributions are welcome! Please follow these steps:
 3. Commit your changes
 4. Push the branch to your fork
 5. Open a Pull Request
+
+Feature requests and bug reports can be submitted via GitHub Issues. Please check existing issues before creating a new one.
 
 For significant changes, please open an issue first to discuss your proposed changes.
 

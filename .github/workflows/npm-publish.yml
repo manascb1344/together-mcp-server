@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Update package version
         run: |
-          npm version ${{ steps.version.outputs.NEW_VERSION }} --no-git-tag-version || echo "Version not changed"
+          npm version ${{ steps.version.outputs.NEW_VERSION }} --no-git-tag-version
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json
+          git commit -m "Bump version to ${{ steps.version.outputs.NEW_VERSION }}"
+          git push
       - name: Publish package
         run: npm publish --access public
         env:
