@@ -36,7 +36,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add package.json
-          git commit -m "Bump version to ${{ steps.version.outputs.NEW_VERSION }}"
+          git commit -m "Bump version to ${{ steps.version.outputs.NEW_VERSION }} via GitHub Actions"
           git push
       - name: Publish package
         run: npm publish --access public
