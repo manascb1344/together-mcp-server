@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "together-image-gen": {
+      "command": "node",
+      "args": [
+        "/home/mcb76/Documents/Cline/MCP/image-gen/build/index.js"
+      ],
+      "env": {
+        "TOGETHER_API_KEY": "your-api-key-here"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

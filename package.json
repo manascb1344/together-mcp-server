@@ -1,0 +1,45 @@
+{
+  "name": "together-mcp",
+  "version": "0.1.0",
+  "description": "Image Generation MCP Server using Together.AI - A Model Context Protocol server for AI image generation",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "together-mcp": "build/index.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manascb1344/together-mcp-server"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "image-generation",
+    "together-ai"
+  ],
+  "author": "Model Context Protocol",
+  "license": "MIT",
+  "files": [
+    "build",
+    "build/index.js"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.6.0",
+    "axios": "^1.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+  }
+}
