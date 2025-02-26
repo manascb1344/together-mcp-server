@@ -132,28 +132,18 @@ class ImageGenerationServer {
         throw new McpError(ErrorCode.InvalidParams, 'Prompt is required and must be a string');
       }
 
-      const args: GenerateImageArgs = {
-        prompt: request.params.arguments.prompt,
-        ...(typeof request.params.arguments.model === 'string' && { model: request.params.arguments.model }),
-        ...(typeof request.params.arguments.width === 'number' && { width: request.params.arguments.width }),
-        ...(typeof request.params.arguments.height === 'number' && { height: request.params.arguments.height }),
-        ...(typeof request.params.arguments.steps === 'number' && { steps: request.params.arguments.steps }),
-        ...(typeof request.params.arguments.n === 'number' && { n: request.params.arguments.n }),
-        ...(typeof request.params.arguments.response_format === 'string' && { response_format: request.params.arguments.response_format }),
-      };
-      const config = { ...defaultConfig, ...args };
+const requestBody = {
+  ...defaultConfig,
+  prompt: request.params.arguments.prompt,
+  ...(request.params.arguments.model && { model: request.params.arguments.model }),
+  ...(request.params.arguments.width && { width: request.params.arguments.width }),
+  ...(request.params.arguments.height && { height: request.params.arguments.height }),
+  ...(request.params.arguments.steps && { steps: request.params.arguments.steps }),
+  ...(request.params.arguments.n && { n: request.params.arguments.n }),
+  ...(request.params.arguments.response_format && { response_format: request.params.arguments.response_format })
+};
 
-      try {
-        // Ensure model is included and format request exactly as API expects
-        const requestBody = {
-          model: config.model || defaultConfig.model,
-          prompt: config.prompt,
-          width: config.width || defaultConfig.width,
-          height: config.height || defaultConfig.height,
-          steps: config.steps || defaultConfig.steps,
-          n: config.n || defaultConfig.n,
-          response_format: config.response_format || defaultConfig.response_format
-        };
+try {
 
         const response = await axios.post(
           this.API_ENDPOINT,

@@ -41,13 +41,103 @@ Add to your MCP server configuration:
 }
 ```
 
-## Available Tools
+## Usage
 
-The server implements one tool:
+The server provides one tool: `generate_image`
 
-### generate_image
+### Using generate_image
 
-Generates an image based on the given textual prompt and optional parameters.
+This tool has only one required parameter - the prompt. All other parameters are optional and use sensible defaults if not provided.
+
+#### Parameters
+
+```typescript
+{
+  // Required
+  prompt: string;          // Text description of the image to generate
+
+  // Optional with defaults
+  model?: string;          // Default: "black-forest-labs/FLUX.1-schnell-Free"
+  width?: number;          // Default: 1024 (min: 128, max: 2048)
+  height?: number;         // Default: 768 (min: 128, max: 2048)
+  steps?: number;          // Default: 1 (min: 1, max: 100)
+  n?: number;             // Default: 1 (max: 4)
+  response_format?: string; // Default: "b64_json" (options: ["b64_json", "url"])
+}
+```
+
+#### Minimal Request Example
+
+Only the prompt is required:
+
+```json
+{
+  "name": "generate_image",
+  "arguments": {
+    "prompt": "A serene mountain landscape at sunset"
+  }
+}
+```
+
+#### Full Request Example
+
+Override any defaults by including the parameters:
+
+```json
+{
+  "name": "generate_image",
+  "arguments": {
+    "prompt": "A serene mountain landscape at sunset",
+    "width": 1024,
+    "height": 768,
+    "steps": 20,
+    "n": 1,
+    "response_format": "b64_json",
+    "model": "black-forest-labs/FLUX.1-schnell-Free"
+  }
+}
+```
+
+#### Response Format
+
+The response will be a JSON object containing:
+
+```json
+{
+  "id": string,        // Generation ID
+  "model": string,     // Model used
+  "object": "list",
+  "data": [
+    {
+      "timings": {
+        "inference": number  // Time taken for inference
+      },
+      "index": number,      // Image index
+      "b64_json": string    // Base64 encoded image data (if response_format is "b64_json")
+      // OR
+      "url": string        // URL to generated image (if response_format is "url")
+    }
+  ]
+}
+```
+
+### Default Values
+
+If not specified in the request, these defaults are used:
+
+- model: "black-forest-labs/FLUX.1-schnell-Free"
+- width: 1024
+- height: 768
+- steps: 1
+- n: 1
+- response_format: "b64_json"
+
+### Important Notes
+
+1. Only the `prompt` parameter is required
+2. All optional parameters use defaults if not provided
+3. When provided, parameters must meet their constraints (e.g., width/height ranges)
+4. Base64 responses can be large - use URL format for larger images
 
 ## Prerequisites
 
