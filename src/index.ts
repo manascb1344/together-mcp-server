@@ -8,6 +8,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
 interface GenerateImageArgs {
   prompt: string;
   model?: string;
@@ -16,6 +19,7 @@ interface GenerateImageArgs {
   steps?: number;
   n?: number;
   response_format?: string;
+  image_path?: string;
 }
 
 const defaultConfig = {
@@ -43,7 +47,7 @@ class ImageGenerationServer {
     this.server = new Server(
       {
         name: 'together-image-generator',
-        version: '0.1.0',
+        version: '0.1.4',
       },
       {
         capabilities: {
@@ -106,6 +110,10 @@ class ImageGenerationServer {
                 description: 'Response format (default: b64_json)',
                 enum: ['b64_json', 'url'],
               },
+              image_path: {
+                type: 'string',
+                description: 'Optional path to save the generated image as PNG',
+              },
             },
             required: ['prompt'],
           },
@@ -155,6 +163,29 @@ try {
             },
           }
         );
+
+        // If image_path is provided, save the image
+        if (request.params.arguments.image_path && response.data.data?.[0]?.b64_json) {
+          try {
+            const imageBuffer = Buffer.from(response.data.data[0].b64_json, 'base64');
+            const outputPath = path.resolve(request.params.arguments.image_path);
+            await fs.writeFile(outputPath, imageBuffer);
+            
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `Image saved successfully to: ${outputPath}\n\n${JSON.stringify(response.data, null, 2)}`,
+                },
+              ],
+            };
+          } catch (error) {
+            throw new McpError(
+              ErrorCode.InternalError,
+              `Failed to save image: ${error instanceof Error ? error.message : String(error)}`
+            );
+          }
+        }
 
         return {
           content: [
