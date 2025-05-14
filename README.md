@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/manascb1344-together-mcp-server-badge.png)](https://mseep.ai/app/manascb1344-together-mcp-server)
+
 # Image Generation MCP Server
 
 A Model Context Protocol (MCP) server that enables seamless generation of high-quality images using the Flux.1 Schnell model via Together AI. This server provides a standardized interface to specify image generation parameters.
