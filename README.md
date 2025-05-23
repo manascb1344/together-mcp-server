@@ -1,5 +1,7 @@
 # Image Generation MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@manascb1344/together-mcp-server)](https://smithery.ai/server/@manascb1344/together-mcp-server)
+
 A Model Context Protocol (MCP) server that enables seamless generation of high-quality images using the Flux.1 Schnell model via Together AI. This server provides a standardized interface to specify image generation parameters.
 <div align="center">
   
@@ -23,6 +25,14 @@ A Model Context Protocol (MCP) server that enables seamless generation of high-q
 - Optional image saving to disk in PNG format
 
 ## Installation
+
+### Installing via Smithery
+
+To install Image Generation Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@manascb1344/together-mcp-server):
+
+```bash
+npx -y @smithery/cli install @manascb1344/together-mcp-server --client claude
+```
 
 ```bash
 npm install together-mcp
