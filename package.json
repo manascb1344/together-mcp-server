@@ -37,10 +37,10 @@
     "typescript": "^5.9.2"
   },
   "scripts": {
-    "deploy": "wrangler deploy",
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
-    "prepare": "npm run build",
-    "watch": "tsc --watch",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector build/index.js"
   }
 }
