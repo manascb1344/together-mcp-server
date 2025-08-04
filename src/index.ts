@@ -7,6 +7,7 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
+import { loadConfig } from './config.js';
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -246,14 +247,9 @@ try {
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-// Get API key from environment variable
-const API_KEY = process.env.TOGETHER_API_KEY;
-if (!API_KEY) {
-  throw new Error('TOGETHER_API_KEY environment variable is required');
-}
-
-// Create and run server
-const server = new ImageGenerationServer(API_KEY);
+// Load configuration
+const cfg = loadConfig();
+const serverInstance = new ImageGenerationServer(cfg.TOGETHER_API_KEY);
 const transport = new StdioServerTransport();
-server.server.connect(transport).catch(console.error);
+serverInstance.server.connect(transport).catch(console.error);
 console.error('Together Image Generation MCP server running on stdio');
