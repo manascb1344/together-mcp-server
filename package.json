@@ -29,11 +29,12 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "0.6.0",
-    "axios": "^1.6.7"
+    "axios": "^1.11.0",
+    "zod": "^4.0.14"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "typescript": "^5.3.3"
+    "@types/node": "^20.19.9",
+    "typescript": "^5.9.2"
   },
   "scripts": {
     "deploy": "wrangler deploy",
