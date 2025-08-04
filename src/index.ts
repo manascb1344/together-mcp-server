@@ -12,6 +12,47 @@ import { loadConfig } from './config.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+async function postWithResilience<T>(url: string, body: unknown, apiKey: string, timeoutMs: number): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await axios.post(url, body, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: timeoutMs,
+      });
+      return response.data as T;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status && error.response.status >= 500 && error.response.status < 600) {
+          // Retry on 5xx server errors
+          lastError = new Error(`Server error ${error.response.status}: ${error.response.data?.message || error.message}`);
+        } else {
+          // Don't retry on other errors
+          throw error;
+        }
+      } else {
+        // Don't retry on non-Axios errors
+        throw error;
+      }
+      
+      // If this was the last attempt, throw the last error
+      if (attempt === 2) {
+        throw lastError;
+      }
+      
+      // Exponential backoff with jitter
+      const delay = Math.min(2000, 300 * (attempt + 1)) + Math.floor(Math.random() * 200);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError || new Error('Unknown error occurred');
+}
+
 interface GenerateImageArgs {
   prompt: string;
   model?: string;
@@ -154,15 +195,11 @@ const requestBody = {
 
 try {
 
-        const response = await axios.post(
+        const response = await postWithResilience<any>(
           this.API_ENDPOINT,
           requestBody,
-          {
-            headers: {
-              'Authorization': `Bearer ${this.apiKey}`,
-              'Content-Type': 'application/json',
-            },
-          }
+          this.apiKey,
+          cfg.TIMEOUT_MS
         );
 
         // If image_path is provided, save the image
