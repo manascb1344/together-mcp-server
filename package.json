@@ -8,7 +8,7 @@
     "together-mcp": "build/index.js"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "repository": {
     "type": "git",
@@ -39,7 +39,7 @@
   "scripts": {
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "dev": "tsc --watch",
-    "lint": "eslint . --ext .ts",
+    "lint": "prettier --check .",
     "format": "prettier --write .",
     "inspector": "pnpm dlx @modelcontextprotocol/inspector build/index.js"
   }
