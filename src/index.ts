@@ -185,12 +185,12 @@ class ImageGenerationServer {
 const requestBody = {
   ...defaultConfig,
   prompt: request.params.arguments.prompt,
-  ...(request.params.arguments.model && { model: request.params.arguments.model }),
-  ...(request.params.arguments.width && { width: request.params.arguments.width }),
-  ...(request.params.arguments.height && { height: request.params.arguments.height }),
-  ...(request.params.arguments.steps && { steps: request.params.arguments.steps }),
-  ...(request.params.arguments.n && { n: request.params.arguments.n }),
-  ...(request.params.arguments.response_format && { response_format: request.params.arguments.response_format })
+  ...(request.params.arguments.model !== undefined ? { model: request.params.arguments.model } : {}),
+  ...(request.params.arguments.width !== undefined ? { width: request.params.arguments.width } : {}),
+  ...(request.params.arguments.height !== undefined ? { height: request.params.arguments.height } : {}),
+  ...(request.params.arguments.steps !== undefined ? { steps: request.params.arguments.steps } : {}),
+  ...(request.params.arguments.n !== undefined ? { n: request.params.arguments.n } : {}),
+  ...(request.params.arguments.response_format !== undefined ? { response_format: request.params.arguments.response_format } : {})
 };
 
 try {
