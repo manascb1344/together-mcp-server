@@ -11,6 +11,15 @@ import { loadConfig } from './config.js';
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import http from 'node:http';
+import https from 'node:https';
+
+const httpsAgent = new https.Agent({ keepAlive: true });
+const httpAgent = new http.Agent({ keepAlive: true });
+
+// Configure axios defaults
+axios.defaults.httpsAgent = httpsAgent;
+axios.defaults.httpAgent = httpAgent;
 
 async function postWithResilience<T>(url: string, body: unknown, apiKey: string, timeoutMs: number): Promise<T> {
   let lastError: Error | null = null;
