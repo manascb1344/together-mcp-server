@@ -217,6 +217,11 @@ try {
           try {
             const imageBuffer = Buffer.from(response.data.data[0].b64_json, 'base64');
             const outputPath = path.resolve(request.params.arguments.image_path);
+            
+            // Ensure directory exists
+            const outputDir = path.dirname(outputPath);
+            await fs.mkdir(outputDir, { recursive: true });
+            
             await fs.writeFile(outputPath, imageBuffer);
             
             return {
