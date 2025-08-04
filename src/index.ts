@@ -14,6 +14,8 @@ import * as path from 'path';
 import http from 'node:http';
 import https from 'node:https';
 
+const API_ENDPOINT = 'https://api.together.xyz/v1/images/generations' as const;
+
 const httpsAgent = new https.Agent({ keepAlive: true });
 const httpAgent = new http.Agent({ keepAlive: true });
 
@@ -85,7 +87,6 @@ const defaultConfig = {
 class ImageGenerationServer {
   public readonly server: Server;
   private readonly apiKey: string;
-  private readonly API_ENDPOINT = 'https://api.together.xyz/v1/images/generations';
   private readonly listToolsHandler: (request: any) => Promise<any>;
   private readonly callToolHandler: (request: any) => Promise<any>;
 
@@ -205,7 +206,7 @@ const requestBody = {
 try {
 
         const response = await postWithResilience<any>(
-          this.API_ENDPOINT,
+          API_ENDPOINT,
           requestBody,
           this.apiKey,
           cfg.TIMEOUT_MS
