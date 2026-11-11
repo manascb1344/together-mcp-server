@@ -2,6 +2,9 @@
 build/
 dist/
 
+# Test coverage
+coverage/
+
 # Dependencies
 node_modules/
 .pnpm-store/
@@ -26,6 +29,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 memory-bank/
+# Tool state
+.omo/
 
 .roo/
 .roomodes

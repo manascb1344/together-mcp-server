@@ -33,8 +33,12 @@
     "zod": "^4.0.14"
   },
   "devDependencies": {
+    "@jest/globals": "^30.5.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.19.9",
+    "jest": "^30.5.2",
     "prettier": "^3.6.2",
+    "ts-jest": "^29.4.15",
     "typescript": "^5.9.2"
   },
   "scripts": {
@@ -42,6 +46,7 @@
     "dev": "tsc --watch",
     "lint": "prettier --check .",
     "format": "prettier --write .",
-    "inspector": "pnpm dlx @modelcontextprotocol/inspector build/index.js"
+    "inspector": "pnpm dlx @modelcontextprotocol/inspector build/index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   }
 }
