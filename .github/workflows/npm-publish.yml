@@ -113,3 +113,17 @@ jobs:
 
       - name: Publish package
         run: npm publish --access public
+
+      - name: Pack tarball
+        run: npm pack
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" ./*.tgz --clobber
+          else
+            gh release create "v$VERSION" ./*.tgz --title "v$VERSION" --notes "Release v$VERSION"
+          fi
