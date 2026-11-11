@@ -46,7 +46,7 @@ jobs:
 
   publish:
     needs: ci
-    if: "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release): bump version') }}"
+    if: "${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release): bump version') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
