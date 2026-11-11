@@ -113,6 +113,11 @@ jobs:
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.next }}"
           git push
 
+      - name: Verify npm auth
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm whoami
+
       - name: Publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
