@@ -29,7 +29,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           cache: pnpm
 
       - name: Install dependencies
@@ -62,7 +62,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
@@ -74,8 +74,6 @@ jobs:
 
       - name: Resolve next version
         id: version
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           PUBLISHED=$(npm view together-mcp version 2>/dev/null || echo "0.0.0")
           LOCAL=$(node -p "require('./package.json').version")
@@ -113,12 +111,5 @@ jobs:
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.next }}"
           git push
 
-      - name: Verify npm auth
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm whoami
-
       - name: Publish package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
