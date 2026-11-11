@@ -1,20 +1,20 @@
 #!/usr/bin/env node
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
   ErrorCode,
   ListToolsRequestSchema,
   McpError,
-} from '@modelcontextprotocol/sdk/types.js';
-import axios from 'axios';
-import { loadConfig } from './config.js';
+} from "@modelcontextprotocol/sdk/types.js";
+import axios from "axios";
+import { loadConfig } from "./config.js";
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import http from 'node:http';
-import https from 'node:https';
+import * as fs from "fs/promises";
+import * as path from "path";
+import http from "node:http";
+import https from "node:https";
 
-const API_ENDPOINT = 'https://api.together.xyz/v1/images/generations' as const;
+const API_ENDPOINT = "https://api.together.xyz/v1/images/generations" as const;
 
 const httpsAgent = new https.Agent({ keepAlive: true });
 const httpAgent = new http.Agent({ keepAlive: true });
@@ -23,24 +23,35 @@ const httpAgent = new http.Agent({ keepAlive: true });
 axios.defaults.httpsAgent = httpsAgent;
 axios.defaults.httpAgent = httpAgent;
 
-async function postWithResilience<T>(url: string, body: unknown, apiKey: string, timeoutMs: number): Promise<T> {
+async function postWithResilience<T>(
+  url: string,
+  body: unknown,
+  apiKey: string,
+  timeoutMs: number,
+): Promise<T> {
   let lastError: Error | null = null;
-  
+
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const response = await axios.post(url, body, {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
         timeout: timeoutMs,
       });
       return response.data as T;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        if (error.response?.status && error.response.status >= 500 && error.response.status < 600) {
+        if (
+          error.response?.status &&
+          error.response.status >= 500 &&
+          error.response.status < 600
+        ) {
           // Retry on 5xx server errors
-          lastError = new Error(`Server error ${error.response.status}: ${error.response.data?.message || error.message}`);
+          lastError = new Error(
+            `Server error ${error.response.status}: ${error.response.data?.message || error.message}`,
+          );
         } else {
           // Don't retry on other errors
           throw error;
@@ -49,19 +60,20 @@ async function postWithResilience<T>(url: string, body: unknown, apiKey: string,
         // Don't retry on non-Axios errors
         throw error;
       }
-      
+
       // If this was the last attempt, throw the last error
       if (attempt === 2) {
         throw lastError;
       }
-      
+
       // Exponential backoff with jitter
-      const delay = Math.min(2000, 300 * (attempt + 1)) + Math.floor(Math.random() * 200);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      const delay =
+        Math.min(2000, 300 * (attempt + 1)) + Math.floor(Math.random() * 200);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  
-  throw lastError || new Error('Unknown error occurred');
+
+  throw lastError || new Error("Unknown error occurred");
 }
 
 interface GenerateImageArgs {
@@ -81,7 +93,7 @@ const defaultConfig = {
   height: 768,
   steps: 1,
   n: 1,
-  response_format: "b64_json"
+  response_format: "b64_json",
 };
 
 class ImageGenerationServer {
@@ -93,19 +105,19 @@ class ImageGenerationServer {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
     if (!this.apiKey) {
-      throw new Error('TOGETHER_API_KEY is required');
+      throw new Error("TOGETHER_API_KEY is required");
     }
 
     this.server = new Server(
       {
-        name: 'together-image-generator',
-        version: '0.1.4',
+        name: "together-image-generator",
+        version: "0.1.4",
       },
       {
         capabilities: {
           tools: {},
         },
-      }
+      },
     );
 
     // Store handlers for direct access
@@ -113,61 +125,62 @@ class ImageGenerationServer {
     this.callToolHandler = this.createCallToolHandler();
 
     this.setupToolHandlers();
-    this.server.onerror = (error) => console.error('[MCP Error]', error);
+    this.server.onerror = (error) => console.error("[MCP Error]", error);
   }
 
   private createListToolsHandler() {
     return async () => ({
       tools: [
         {
-          name: 'generate_image',
-          description: 'Generate an image using Together AI API',
+          name: "generate_image",
+          description: "Generate an image using Together AI API",
           inputSchema: {
-            type: 'object',
+            type: "object",
             properties: {
               prompt: {
-                type: 'string',
-                description: 'Text prompt for image generation',
+                type: "string",
+                description: "Text prompt for image generation",
               },
               model: {
-                type: 'string',
-                description: 'Model to use for generation (default: black-forest-labs/FLUX.1-schnell-Free)',
+                type: "string",
+                description:
+                  "Model to use for generation (default: black-forest-labs/FLUX.1-schnell-Free)",
               },
               width: {
-                type: 'number',
-                description: 'Image width (default: 1024)',
+                type: "number",
+                description: "Image width (default: 1024)",
                 minimum: 128,
                 maximum: 2048,
               },
               height: {
-                type: 'number',
-                description: 'Image height (default: 768)',
+                type: "number",
+                description: "Image height (default: 768)",
                 minimum: 128,
                 maximum: 2048,
               },
               steps: {
-                type: 'number',
-                description: 'Number of inference steps (default: 1)',
+                type: "number",
+                description: "Number of inference steps (default: 1)",
                 minimum: 1,
                 maximum: 100,
               },
               n: {
-                type: 'number',
-                description: 'Number of images to generate (default: 1)',
+                type: "number",
+                description: "Number of images to generate (default: 1)",
                 minimum: 1,
                 maximum: 4,
               },
               response_format: {
-                type: 'string',
-                description: 'Response format (default: b64_json)',
-                enum: ['b64_json', 'url'],
+                type: "string",
+                description: "Response format (default: b64_json)",
+                enum: ["b64_json", "url"],
               },
               image_path: {
-                type: 'string',
-                description: 'Optional path to save the generated image as PNG',
+                type: "string",
+                description: "Optional path to save the generated image as PNG",
               },
             },
-            required: ['prompt'],
+            required: ["prompt"],
           },
         },
       ],
@@ -176,58 +189,89 @@ class ImageGenerationServer {
 
   private createCallToolHandler() {
     return async (request: any) => {
-      if (request.params.name !== 'generate_image') {
+      if (request.params.name !== "generate_image") {
         throw new McpError(
           ErrorCode.MethodNotFound,
-          `Unknown tool: ${request.params.name}`
+          `Unknown tool: ${request.params.name}`,
         );
       }
 
       // Type check and validate arguments
-      if (!request.params.arguments || typeof request.params.arguments !== 'object') {
-        throw new McpError(ErrorCode.InvalidParams, 'Invalid arguments provided');
+      if (
+        !request.params.arguments ||
+        typeof request.params.arguments !== "object"
+      ) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          "Invalid arguments provided",
+        );
       }
 
-      if (!('prompt' in request.params.arguments) || typeof request.params.arguments.prompt !== 'string') {
-        throw new McpError(ErrorCode.InvalidParams, 'Prompt is required and must be a string');
+      if (
+        !("prompt" in request.params.arguments) ||
+        typeof request.params.arguments.prompt !== "string"
+      ) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          "Prompt is required and must be a string",
+        );
       }
 
-const requestBody = {
-  ...defaultConfig,
-  prompt: request.params.arguments.prompt,
-  ...(request.params.arguments.model !== undefined ? { model: request.params.arguments.model } : {}),
-  ...(request.params.arguments.width !== undefined ? { width: request.params.arguments.width } : {}),
-  ...(request.params.arguments.height !== undefined ? { height: request.params.arguments.height } : {}),
-  ...(request.params.arguments.steps !== undefined ? { steps: request.params.arguments.steps } : {}),
-  ...(request.params.arguments.n !== undefined ? { n: request.params.arguments.n } : {}),
-  ...(request.params.arguments.response_format !== undefined ? { response_format: request.params.arguments.response_format } : {})
-};
+      const requestBody = {
+        ...defaultConfig,
+        prompt: request.params.arguments.prompt,
+        ...(request.params.arguments.model !== undefined
+          ? { model: request.params.arguments.model }
+          : {}),
+        ...(request.params.arguments.width !== undefined
+          ? { width: request.params.arguments.width }
+          : {}),
+        ...(request.params.arguments.height !== undefined
+          ? { height: request.params.arguments.height }
+          : {}),
+        ...(request.params.arguments.steps !== undefined
+          ? { steps: request.params.arguments.steps }
+          : {}),
+        ...(request.params.arguments.n !== undefined
+          ? { n: request.params.arguments.n }
+          : {}),
+        ...(request.params.arguments.response_format !== undefined
+          ? { response_format: request.params.arguments.response_format }
+          : {}),
+      };
 
-try {
-
+      try {
         const response = await postWithResilience<any>(
           API_ENDPOINT,
           requestBody,
           this.apiKey,
-          cfg.TIMEOUT_MS
+          cfg.TIMEOUT_MS,
         );
 
         // If image_path is provided, save the image
-        if (request.params.arguments.image_path && response.data.data?.[0]?.b64_json) {
+        if (
+          request.params.arguments.image_path &&
+          response.data.data?.[0]?.b64_json
+        ) {
           try {
-            const imageBuffer = Buffer.from(response.data.data[0].b64_json, 'base64');
-            const outputPath = path.resolve(request.params.arguments.image_path);
-            
+            const imageBuffer = Buffer.from(
+              response.data.data[0].b64_json,
+              "base64",
+            );
+            const outputPath = path.resolve(
+              request.params.arguments.image_path,
+            );
+
             // Ensure directory exists
             const outputDir = path.dirname(outputPath);
             await fs.mkdir(outputDir, { recursive: true });
-            
+
             await fs.writeFile(outputPath, imageBuffer);
-            
+
             return {
               content: [
                 {
-                  type: 'text',
+                  type: "text",
                   text: `Image saved successfully to: ${outputPath}\n\n${JSON.stringify(response.data, null, 2)}`,
                 },
               ],
@@ -235,7 +279,7 @@ try {
           } catch (error) {
             throw new McpError(
               ErrorCode.InternalError,
-              `Failed to save image: ${error instanceof Error ? error.message : String(error)}`
+              `Failed to save image: ${error instanceof Error ? error.message : String(error)}`,
             );
           }
         }
@@ -243,7 +287,7 @@ try {
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(response.data, null, 2),
             },
           ],
@@ -253,7 +297,7 @@ try {
           return {
             content: [
               {
-                type: 'text',
+                type: "text",
                 text: `API Error: ${error.response?.data?.message || error.message}`,
               },
             ],
@@ -266,7 +310,10 @@ try {
   }
 
   private setupToolHandlers() {
-    this.server.setRequestHandler(ListToolsRequestSchema, this.listToolsHandler);
+    this.server.setRequestHandler(
+      ListToolsRequestSchema,
+      this.listToolsHandler,
+    );
     this.server.setRequestHandler(CallToolRequestSchema, this.callToolHandler);
   }
 
@@ -276,32 +323,32 @@ try {
 
       // Handle request based on method
       let result;
-      if (body.method === 'list_tools') {
+      if (body.method === "list_tools") {
         result = await this.listToolsHandler(body);
-      } else if (body.method === 'call_tool') {
+      } else if (body.method === "call_tool") {
         result = await this.callToolHandler(body);
       } else {
         throw new Error(`Unknown method: ${body.method}`);
       }
 
       return new Response(JSON.stringify(result), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     } catch (err) {
       const error = err as Error;
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
   }
 }
 
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 // Load configuration
 const cfg = loadConfig();
 const serverInstance = new ImageGenerationServer(cfg.TOGETHER_API_KEY);
 const transport = new StdioServerTransport();
 serverInstance.server.connect(transport).catch(console.error);
-console.error('Together Image Generation MCP server running on stdio');
+console.error("Together Image Generation MCP server running on stdio");
