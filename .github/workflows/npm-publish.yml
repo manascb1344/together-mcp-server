@@ -111,9 +111,6 @@ jobs:
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.next }}"
           git push
 
-      - name: Publish package
-        run: npm publish --access public
-
       - name: Pack tarball
         run: npm pack
 
@@ -127,3 +124,6 @@ jobs:
           else
             gh release create "v$VERSION" ./*.tgz --title "v$VERSION" --notes "Release v$VERSION"
           fi
+
+      - name: Publish package
+        run: npm publish --access public
