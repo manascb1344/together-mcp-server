@@ -47,6 +47,7 @@
     "lint": "prettier --check .",
     "format": "prettier --write .",
     "inspector": "pnpm dlx @modelcontextprotocol/inspector build/index.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "prepack": "pnpm build"
   }
 }

@@ -1,49 +1,119 @@
-name: Publish Package to npmjs
+name: CI & Publish
+
 on:
   push:
-    branches: ['**']
-    tags: ['*']
+    branches: [main]
     paths:
-      - '**.js'
-      - '**.ts'
-      - 'package.json'
-      - 'package-lock.json'
+      - "**.js"
+      - "**.ts"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/npm-publish.yml"
+  pull_request:
+    branches: [main]
   release:
     types: [published]
+  workflow_dispatch:
+
 jobs:
-  build:
+  ci:
+    if: "${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore(release): bump version') }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  publish:
+    needs: ci
+    if: "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release): bump version') }}"
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      # Setup .npmrc file to publish to npm
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm install
-      - name: Get current version and increment
+          node-version: 20.x
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Resolve next version
         id: version
-        run: |
-          CURRENT_VERSION=$(npm view together-mcp version)
-          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-          PATCH=$((VERSION_PARTS[2] + 1))
-          NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.$PATCH"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
         env:
-          NPM_CONFIG_USERCONFIG: /home/runner/work/_temp/.npmrc
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Update package version
         run: |
-          npm version ${{ steps.version.outputs.NEW_VERSION }} --no-git-tag-version
+          PUBLISHED=$(npm view together-mcp version 2>/dev/null || echo "0.0.0")
+          LOCAL=$(node -p "require('./package.json').version")
+          NEXT=$(node -e "
+            const parse = (v) => v.split('.').map((n) => parseInt(n, 10) || 0);
+            const [pMaj,pMin,pPat] = parse(process.argv[1]);
+            const [lMaj,lMin,lPat] = parse(process.argv[2]);
+            let maj=pMaj, min=pMin, pat=pPat;
+            if (lMaj>maj || (lMaj===maj && lMin>min) || (lMaj===maj && lMin===min && lPat>=pat)) {
+              maj=lMaj; min=lMin; pat=lPat + 1;
+            } else {
+              pat = pPat + 1;
+            }
+            console.log([maj,min,pat].join('.'));
+          " "$PUBLISHED" "$LOCAL")
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Bump package version
+        id: bump
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          if [ "$CURRENT" != "${{ steps.version.outputs.next }}" ]; then
+            npm version "${{ steps.version.outputs.next }}" --no-git-tag-version
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push version bump
+        if: steps.bump.outputs.changed == 'true'
+        run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add package.json
-          git commit -m "Bump version to ${{ steps.version.outputs.NEW_VERSION }} via GitHub Actions"
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.next }}"
           git push
+
       - name: Publish package
-        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
